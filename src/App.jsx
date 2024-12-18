@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NotificationService from './NotificationService';
 import {
   DollarSign, 
   Receipt, 
@@ -438,8 +439,16 @@ function App() {
   const handleActivation = (data) => {
     if (data.paymentStatus === 'unpaid') {
       setDebts([...debts, data]);
+      NotificationService.showNotification(
+        'إضافة مشترك جديد',
+        `تم إضافة مشترك غير واصل: ${data.subscriberName}`
+      );
     } else {
-      setPaidSubscribers([...paidSubscribers, data]); // إضافة المشترك الواصل
+      setPaidSubscribers([...paidSubscribers, data]);
+      NotificationService.showNotification(
+        'إضافة مشترك جديد',
+        `تم إضافة مشترك واصل: ${data.subscriberName}`
+      );
     }
     setCurrentView('main');
   };
