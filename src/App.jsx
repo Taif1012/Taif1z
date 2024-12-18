@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import NotificationService from './NotificationService';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   DollarSign, 
   Receipt, 
@@ -477,6 +479,7 @@ function App() {
       <div className="container mx-auto">
         {renderView()}
       </div>
+      <ToastContainer />
     </div>
   );
 }
