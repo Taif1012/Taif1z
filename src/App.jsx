@@ -72,7 +72,7 @@ function ActivationForm({ onSubmit, onReturn }) {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              المبلغ 
+              المبلغ المراد
             </label>
             <select
               value={amount}
@@ -80,7 +80,7 @@ function ActivationForm({ onSubmit, onReturn }) {
               className="w-full p-2 border rounded-md text-right"
             >
               <option value="">اختر المبلغ</option>
-              <option value="30">30</option>
+              <option value="30">40</option>
               <option value="35">35</option>
             </select>
           </div>
@@ -118,30 +118,32 @@ function ActivationForm({ onSubmit, onReturn }) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full p-2 rounded-md text-white flex items-center justify-center gap-2
-              ${isSubmitting ? 'bg-emerald-400' : 'bg-emerald-500 hover:bg-emerald-600'}
-            `}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                جاري التفعيل...
-              </>
-            ) : (
-              'تفعيل الاشتراك'
-            )}
-          </button>
-
-          <button
-    type="button"
-    onClick={onReturn}
-    className="px-6 py-2 rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700 flex items-center gap-2"
-  >
-    رجوع
-  </button>
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`flex-1 p-2 rounded-md text-white flex items-center justify-center gap-2
+                ${isSubmitting ? 'bg-emerald-400' : 'bg-emerald-500 hover:bg-emerald-600'}
+              `}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري التفعيل...
+                </>
+              ) : (
+                'تفعيل الاشتراك'
+              )}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => onReturn()}
+              className="px-6 py-2 rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700 flex items-center gap-2"
+            >
+              رجوع
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -352,20 +354,16 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'activation':
-        return <ActivationForm onSubmit={handleActivation} />;
+        return <ActivationForm 
+          onSubmit={handleActivation} 
+          onReturn={() => setCurrentView('main')} 
+        />;
       case 'debts':
         return <DebtsView debts={debts} onReturn={() => setCurrentView('main')} />;
       case 'reports':
         return <ReportsView debts={debts} onReturn={() => setCurrentView('main')} />;
       default:
         return <MainMenu onNavigate={setCurrentView} debtsCount={debts.length} />;
-        
-        // في دالة renderView داخل مكون App
-case 'activation':
-  return <ActivationForm 
-    onSubmit={handleActivation} 
-    onReturn={() => setCurrentView('main')} 
-  />;
     }
   };
 
