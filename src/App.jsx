@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import NotificationService from './NotificationService';
+import notificationService from './NotificationService.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {

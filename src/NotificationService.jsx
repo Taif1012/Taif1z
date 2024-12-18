@@ -1,7 +1,8 @@
+// NotificationService.jsx
 import { toast } from 'react-toastify';
 
 class NotificationService {
-  showNotification = (title, message) => {
+  showNotification(title, message) {
     toast.success(
       <div dir="rtl" className="flex flex-col">
         <strong>{title}</strong>
@@ -17,7 +18,8 @@ class NotificationService {
         draggable: true,
       }
     );
-  };
+  }
 }
 
-export default new NotificationService();
+const notificationService = new NotificationService();
+export default notificationService;
