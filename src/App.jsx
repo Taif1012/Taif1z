@@ -80,7 +80,7 @@ function ActivationForm({ onSubmit }) {
               className="w-full p-2 border rounded-md text-right"
             >
               <option value="">اختر المبلغ</option>
-              <option value="30">30</option>
+              <option value="30">40</option>
               <option value="35">35</option>
             </select>
           </div>
