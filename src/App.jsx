@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // نموذج التفعيل
-function ActivationForm({ onSubmit }) {
+function ActivationForm({ onSubmit, onReturn }) {
   const [subscriberName, setSubscriberName] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('paid');
@@ -72,7 +72,7 @@ function ActivationForm({ onSubmit }) {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              المبلغ المراد
+              المبلغ 
             </label>
             <select
               value={amount}
@@ -80,7 +80,7 @@ function ActivationForm({ onSubmit }) {
               className="w-full p-2 border rounded-md text-right"
             >
               <option value="">اختر المبلغ</option>
-              <option value="30">40</option>
+              <option value="30">30</option>
               <option value="35">35</option>
             </select>
           </div>
@@ -134,6 +134,14 @@ function ActivationForm({ onSubmit }) {
               'تفعيل الاشتراك'
             )}
           </button>
+
+          <button
+    type="button"
+    onClick={onReturn}
+    className="px-6 py-2 rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700 flex items-center gap-2"
+  >
+    رجوع
+  </button>
         </form>
       </div>
     </div>
@@ -351,6 +359,13 @@ function App() {
         return <ReportsView debts={debts} onReturn={() => setCurrentView('main')} />;
       default:
         return <MainMenu onNavigate={setCurrentView} debtsCount={debts.length} />;
+        
+        // في دالة renderView داخل مكون App
+case 'activation':
+  return <ActivationForm 
+    onSubmit={handleActivation} 
+    onReturn={() => setCurrentView('main')} 
+  />;
     }
   };
 
