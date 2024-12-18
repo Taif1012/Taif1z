@@ -296,8 +296,85 @@ function ReportsView({ debts, onReturn }) {
   );
 }
 
+
+// عرض المشتركين الواصلين
+function PaidSubscribersView({ subscribers, onReturn }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredSubscribers = subscribers.filter(subscriber => 
+    subscriber.subscriberName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-green-500 to-green-700 p-4">
+        <h2 className="text-2xl text-white font-bold flex items-center justify-center gap-2">
+          <UserPlus className="w-6 h-6" />
+          قائمة المشتركين الواصلين
+        </h2>
+      </div>
+      <div className="p-6">
+        <div className="space-y-4" dir="rtl">
+          <div className="relative">
+            <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="بحث باسم المشترك..."
+              className="w-full p-2 pl-4 pr-10 border rounded-md text-right"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {filteredSubscribers.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-3 text-right">اسم المشترك</th>
+                    <th className="p-3 text-right">المبلغ</th>
+                    <th className="p-3 text-right">التاريخ</th>
+                    <th className="p-3 text-right">الحالة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubscribers.map((subscriber, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="p-3">{subscriber.subscriberName}</td>
+                      <td className="p-3">{subscriber.amount}</td>
+                      <td className="p-3">{new Date(subscriber.date).toLocaleDateString('ar-SA')}</td>
+                      <td className="p-3">
+                        <span className="inline-block px-2 py-1 rounded-full bg-green-100 text-green-700">
+                          واصل
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border rounded-md p-3 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <p>{searchTerm ? 'لا توجد نتائج للبحث' : 'لا يوجد مشتركين واصلين'}</p>
+            </div>
+          )}
+          
+          <button
+            onClick={onReturn}
+            className="w-full p-2 border rounded-md hover:bg-gray-50"
+          >
+            عودة للقائمة الرئيسية
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // القائمة الرئيسية
-function MainMenu({ onNavigate, debtsCount = 0 }) {
+function MainMenu({ onNavigate, debtsCount = 0, paidCount = 0 }) {
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="p-8">
@@ -327,8 +404,21 @@ function MainMenu({ onNavigate, debtsCount = 0 }) {
           </button>
 
           <button
+            onClick={() => onNavigate('paidSubscribers')}
+            className="flex items-center justify-center gap-4 p-6 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors group relative"
+          >
+            <UserPlus className="w-8 h-8 group-hover:scale-110 transition-transform" />
+            <span className="text-xl font-medium">المشتركين الواصلين</span>
+            {paidCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-white text-green-500 rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                {paidCount}
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => onNavigate('reports')}
-            className="flex items-center justify-center gap-4 p-6 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors group col-span-2"
+            className="flex items-center justify-center gap-4 p-6 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors group"
           >
             <BarChart3 className="w-8 h-8 group-hover:scale-110 transition-transform" />
             <span className="text-xl font-medium">التقارير</span>
@@ -343,10 +433,13 @@ function MainMenu({ onNavigate, debtsCount = 0 }) {
 function App() {
   const [currentView, setCurrentView] = useState('main');
   const [debts, setDebts] = useState([]);
+  const [paidSubscribers, setPaidSubscribers] = useState([]); // إضافة state جديد
 
   const handleActivation = (data) => {
     if (data.paymentStatus === 'unpaid') {
       setDebts([...debts, data]);
+    } else {
+      setPaidSubscribers([...paidSubscribers, data]); // إضافة المشترك الواصل
     }
     setCurrentView('main');
   };
@@ -354,16 +447,19 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'activation':
-        return <ActivationForm 
-          onSubmit={handleActivation} 
-          onReturn={() => setCurrentView('main')} 
-        />;
+        return <ActivationForm onSubmit={handleActivation} onReturn={() => setCurrentView('main')} />;
       case 'debts':
         return <DebtsView debts={debts} onReturn={() => setCurrentView('main')} />;
       case 'reports':
         return <ReportsView debts={debts} onReturn={() => setCurrentView('main')} />;
+      case 'paidSubscribers': // إضافة حالة جديدة
+        return <PaidSubscribersView subscribers={paidSubscribers} onReturn={() => setCurrentView('main')} />;
       default:
-        return <MainMenu onNavigate={setCurrentView} debtsCount={debts.length} />;
+        return <MainMenu 
+          onNavigate={setCurrentView} 
+          debtsCount={debts.length}
+          paidCount={paidSubscribers.length} 
+        />;
     }
   };
 
