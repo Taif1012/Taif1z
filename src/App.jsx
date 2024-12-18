@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import notificationService from './NotificationService.jsx';
+import { database } from './firebase';
+import { ref, set, onValue } from 'firebase/database';
 import {
   DollarSign, 
   Receipt, 
@@ -436,18 +438,36 @@ function MainMenu({ onNavigate, debtsCount = 0, paidCount = 0 }) {
 function App() {
   const [currentView, setCurrentView] = useState('main');
   const [debts, setDebts] = useState([]);
-  const [paidSubscribers, setPaidSubscribers] = useState([]); // إضافة state جديد
+  const [paidSubscribers, setPaidSubscribers] = useState([]);
 
-  const handleActivation = (data) => {
+  // مزامنة البيانات عند بدء التطبيق
+  useEffect(() => {
+    const debtsRef = ref(database, 'debts');
+    const paidRef = ref(database, 'paidSubscribers');
+
+    onValue(debtsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setDebts(Object.values(data));
+    });
+
+    onValue(paidRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setPaidSubscribers(Object.values(data));
+    });
+  }, []);
+
+  const handleActivation = async (data) => {
     try {
       if (data.paymentStatus === 'unpaid') {
-        setDebts([...debts, data]);
+        // حفظ في Firebase
+        await set(ref(database, `debts/${Date.now()}`), data);
         notificationService.showNotification(
           'إضافة مشترك',
           `تم إضافة ${data.subscriberName} كمشترك غير واصل`
         );
       } else {
-        setPaidSubscribers([...paidSubscribers, data]);
+        // حفظ في Firebase
+        await set(ref(database, `paidSubscribers/${Date.now()}`), data);
         notificationService.showNotification(
           'إضافة مشترك',
           `تم إضافة ${data.subscriberName} كمشترك واصل`
@@ -455,12 +475,11 @@ function App() {
       }
       setCurrentView('main');
     } catch (error) {
-      console.error('Error showing notification:', error);
-      // إظهار رسالة بديلة في حالة فشل الإشعار
-      alert(`تم إضافة المشترك ${data.subscriberName} بنجاح`);
-      setCurrentView('main');
+      console.error('Error:', error);
+      alert(`حدث خطأ أثناء حفظ البيانات`);
     }
   };
+
 
   
 
