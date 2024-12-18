@@ -1,25 +1,18 @@
-// NotificationService.jsx
 import { toast } from 'react-toastify';
 
 class NotificationService {
   showNotification(title, message) {
-    toast.success(
-      <div dir="rtl" className="flex flex-col">
-        <strong>{title}</strong>
-        <span>{message}</span>
-      </div>,
-      {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        rtl: true,
-        pauseOnHover: true,
-        draggable: true,
-      }
-    );
+    // استخدام toast.success مباشرة بدون JSX معقد
+    toast.success(`${title} - ${message}`, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      rtl: true,
+      pauseOnHover: true,
+      draggable: true
+    });
   }
 }
 
-const notificationService = new NotificationService();
-export default notificationService;
+export default new NotificationService();

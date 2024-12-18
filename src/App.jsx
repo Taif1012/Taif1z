@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import notificationService from './NotificationService.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import notificationService from './NotificationService.jsx';
 import {
   DollarSign, 
   Receipt, 
@@ -439,21 +439,30 @@ function App() {
   const [paidSubscribers, setPaidSubscribers] = useState([]); // إضافة state جديد
 
   const handleActivation = (data) => {
-    if (data.paymentStatus === 'unpaid') {
-      setDebts([...debts, data]);
-      NotificationService.showNotification(
-        'إضافة مشترك جديد',
-        `تم إضافة مشترك غير واصل: ${data.subscriberName}`
-      );
-    } else {
-      setPaidSubscribers([...paidSubscribers, data]);
-      NotificationService.showNotification(
-        'إضافة مشترك جديد',
-        `تم إضافة مشترك واصل: ${data.subscriberName}`
-      );
+    try {
+      if (data.paymentStatus === 'unpaid') {
+        setDebts([...debts, data]);
+        notificationService.showNotification(
+          'إضافة مشترك',
+          `تم إضافة ${data.subscriberName} كمشترك غير واصل`
+        );
+      } else {
+        setPaidSubscribers([...paidSubscribers, data]);
+        notificationService.showNotification(
+          'إضافة مشترك',
+          `تم إضافة ${data.subscriberName} كمشترك واصل`
+        );
+      }
+      setCurrentView('main');
+    } catch (error) {
+      console.error('Error showing notification:', error);
+      // إظهار رسالة بديلة في حالة فشل الإشعار
+      alert(`تم إضافة المشترك ${data.subscriberName} بنجاح`);
+      setCurrentView('main');
     }
-    setCurrentView('main');
   };
+
+  
 
   const renderView = () => {
     switch (currentView) {
@@ -479,7 +488,11 @@ function App() {
       <div className="container mx-auto">
         {renderView()}
       </div>
-      <ToastContainer />
+      <ToastContainer 
+        position="top-right"
+        rtl={true}
+        theme="colored"
+      />
     </div>
   );
 }
