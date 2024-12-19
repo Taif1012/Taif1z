@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { database } from './firebase.jsx';
 import { ref, set, onValue } from 'firebase/database';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import notificationService from './NotificationService.jsx';
 
-import {
-  DollarSign, 
+// استيراد المكونات
+import { 
+  UserPlus, 
   Receipt, 
-  BarChart3, 
-  UserPlus,
+  BarChart3,
   Search, 
   AlertCircle, 
-  Loader2
+  Loader2 
 } from 'lucide-react';
+
+// ... باقي الاستيرادات
 
 // نموذج التفعيل
 function ActivationForm({ onSubmit, onReturn }) {
@@ -437,58 +439,71 @@ function MainMenu({ onNavigate, debtsCount = 0, paidCount = 0 }) {
 
 // التطبيق الرئيسي
 function App() {
-  console.log("App component loaded");
   const [currentView, setCurrentView] = useState('main');
   const [debts, setDebts] = useState([]);
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
-  // مزامنة البيانات عند بدء التطبيق
-  const [isLoading, setIsLoading] = useState(true);
-
-useEffect(() => {
-  try {
+  useEffect(() => {
     const debtsRef = ref(database, 'debts');
     const paidRef = ref(database, 'paidSubscribers');
 
-    const unsubscribeDebts = onValue(debtsRef, (snapshot) => {
+    onValue(debtsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setDebts(Object.values(data));
-      setIsLoading(false);
     });
 
-    const unsubscribePaid = onValue(paidRef, (snapshot) => {
+    onValue(paidRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setPaidSubscribers(Object.values(data));
-      setIsLoading(false);
     });
+  }, []);
 
-    return () => {
-      unsubscribeDebts();
-      unsubscribePaid();
-    };
-  } catch (error) {
-    console.error('Error setting up Firebase listeners:', error);
-    setIsLoading(false);
-  }
-}, []);
-
-  
+  const handleActivation = async (data) => {
+    try {
+      if (data.paymentStatus === 'unpaid') {
+        const key = Date.now().toString();
+        await set(ref(database, `debts/${key}`), data);
+        notificationService.showNotification(
+          'إضافة مشترك',
+          `تم إضافة ${data.subscriberName} كمشترك غير واصل`
+        );
+      } else {
+        const key = Date.now().toString();
+        await set(ref(database, `paidSubscribers/${key}`), data);
+        notificationService.showNotification(
+          'إضافة مشترك',
+          `تم إضافة ${data.subscriberName} كمشترك واصل`
+        );
+      }
+      setCurrentView('main');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('حدث خطأ أثناء حفظ البيانات');
+    }
+  };
 
   const renderView = () => {
     switch (currentView) {
       case 'activation':
-        return <ActivationForm onSubmit={handleActivation} onReturn={() => setCurrentView('main')} />;
+        return <ActivationForm 
+          onSubmit={handleActivation} 
+          onReturn={() => setCurrentView('main')} 
+        />;
       case 'debts':
-        return <DebtsView debts={debts} onReturn={() => setCurrentView('main')} />;
+        return <DebtsView 
+          debts={debts} 
+          onReturn={() => setCurrentView('main')} 
+        />;
       case 'reports':
-        return <ReportsView debts={debts} onReturn={() => setCurrentView('main')} />;
-      case 'paidSubscribers': // إضافة حالة جديدة
-        return <PaidSubscribersView subscribers={paidSubscribers} onReturn={() => setCurrentView('main')} />;
+        return <ReportsView 
+          debts={debts} 
+          onReturn={() => setCurrentView('main')} 
+        />;
       default:
         return <MainMenu 
           onNavigate={setCurrentView} 
-          debtsCount={debts.length}
-          paidCount={paidSubscribers.length} 
+          debtsCount={debts.length} 
+          paidCount={paidSubscribers.length}
         />;
     }
   };
@@ -496,13 +511,7 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="container mx-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-screen">
-            <div className="text-xl">جاري التحميل...</div>
-          </div>
-        ) : (
-          renderView()
-        )}
+        {renderView()}
       </div>
       <ToastContainer />
     </div>
