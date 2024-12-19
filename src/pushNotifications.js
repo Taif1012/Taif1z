@@ -3,35 +3,29 @@ import { app } from './firebase.jsx';
 
 const messaging = getMessaging(app);
 
-// دالة التحقق من دعم الإشعارات
-const checkNotificationSupport = () => {
-  if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
-    return false;
-  }
-  return true;
-};
-
-// دالة طلب الإذن
 export const requestNotificationPermission = async () => {
   try {
-    if (!checkNotificationSupport()) return;
+    if (!('Notification' in window)) {
+      console.log('This browser does not support notifications');
+      return;
+    }
 
     const permission = await Notification.requestPermission();
+    console.log('Notification permission:', permission);
+
     if (permission === 'granted') {
-      // تسجيل Service Worker
+      // Register service worker
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        console.log('Service Worker registered with scope:', registration.scope);
+        console.log('Service Worker registered:', registration);
 
-        // الحصول على token
-        const currentToken = await getToken(messaging, {
-          vapidKey: "BK_h1mmdKOPyIouAxXm-cd34031ce3XqIKIYuXVnv888GB49CE4TkqXRT0jbAc_3SN3M0zJmRRuaNugTaC1YudM" // من إعدادات Firebase
+        const token = await getToken(messaging, {
+          vapidKey: "BH1K4SIaqsE3Sdy5i6m4hYIv8Cz-0FDwb5WX9TGCz7RLauSIKpjF3oVvKF3p4Ui7_QPBP4nFo0f-FIwWXI_4bQo" // استبدل بمفتاح VAPID الخاص بك
         });
 
-        if (currentToken) {
-          console.log('FCM Token:', currentToken);
-          return currentToken;
+        if (token) {
+          console.log('FCM Token:', token);
+          return token;
         }
       }
     }
@@ -40,24 +34,22 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-// دالة إرسال الإشعار
 export const showNotification = async (title, body) => {
   try {
-    if (!checkNotificationSupport()) return;
-
     if (Notification.permission === 'granted') {
-      const options = {
-        body: body,
-        icon: '/notification-icon.png', // أضف أيقونة في مجلد public
-        badge: '/badge-icon.png',      // أضف شارة في مجلد public
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, {
+        body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/badge.png',
         dir: 'rtl',
         vibrate: [200, 100, 200],
         tag: 'subscription-notification',
-        renotify: true
-      };
-
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, options);
+        renotify: true,
+        data: {
+          url: window.location.origin
+        }
+      });
     }
   } catch (error) {
     console.error('Error showing notification:', error);

@@ -12,14 +12,20 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload) {
+messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/icon.png',
-    badge: '/badge.png',
-    dir: 'rtl'
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge.png',
+    dir: 'rtl',
+    vibrate: [200, 100, 200]
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  clients.openWindow('/');
 });
