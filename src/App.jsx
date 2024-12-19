@@ -5,6 +5,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import notificationService from './NotificationService.jsx';
 import { showNotification, requestNotificationPermission } from './pushNotifications';
+import { requestNotificationPermission, showNotification } from './pushNotifications';
+
 
 // استيراد المكونات
 import { 
@@ -450,21 +452,26 @@ function App() {
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
   useEffect(() => {
-    requestNotificationPermission();
+    const setupNotifications = async () => {
+      await requestNotificationPermission();
+    };
+    setupNotifications();
   }, []);
-  
+
   const handleActivation = async (data) => {
     try {
       if (data.paymentStatus === 'unpaid') {
-        await set(ref(database, `debts/${Date.now()}`), data);
-        showNotification(
-          'مشترك جديد',
+        const key = Date.now().toString();
+        await set(ref(database, `debts/${key}`), data);
+        await showNotification(
+          'إضافة مشترك جديد',
           `تم إضافة ${data.subscriberName} كمشترك غير واصل`
         );
       } else {
-        await set(ref(database, `paidSubscribers/${Date.now()}`), data);
-        showNotification(
-          'مشترك جديد',
+        const key = Date.now().toString();
+        await set(ref(database, `paidSubscribers/${key}`), data);
+        await showNotification(
+          'إضافة مشترك جديد',
           `تم إضافة ${data.subscriberName} كمشترك واصل`
         );
       }
