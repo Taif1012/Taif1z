@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { database } from './firebase.jsx';
 import { ref, set, onValue } from 'firebase/database';
 import notificationService from './NotificationService.jsx';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
 import {
   DollarSign, 
   Receipt, 
@@ -442,47 +443,34 @@ function App() {
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
   // مزامنة البيانات عند بدء التطبيق
-  useEffect(() => {
-    // مزامنة البيانات من Firebase
+  const [isLoading, setIsLoading] = useState(true);
+
+useEffect(() => {
+  try {
     const debtsRef = ref(database, 'debts');
     const paidRef = ref(database, 'paidSubscribers');
 
-    onValue(debtsRef, (snapshot) => {
+    const unsubscribeDebts = onValue(debtsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setDebts(Object.values(data));
+      setIsLoading(false);
     });
 
-    onValue(paidRef, (snapshot) => {
+    const unsubscribePaid = onValue(paidRef, (snapshot) => {
       const data = snapshot.val();
       if (data) setPaidSubscribers(Object.values(data));
+      setIsLoading(false);
     });
-  }, []);
 
-  const handleActivation = async (data) => {
-    try {
-      if (data.paymentStatus === 'unpaid') {
-        // حفظ في قائمة الديون
-        const key = Date.now().toString();
-        await set(ref(database, `debts/${key}`), data);
-        notificationService.showNotification(
-          'إضافة مشترك',
-          `تم إضافة ${data.subscriberName} كمشترك غير واصل`
-        );
-      } else {
-        // حفظ في قائمة المشتركين الواصلين
-        const key = Date.now().toString();
-        await set(ref(database, `paidSubscribers/${key}`), data);
-        notificationService.showNotification(
-          'إضافة مشترك',
-          `تم إضافة ${data.subscriberName} كمشترك واصل`
-        );
-      }
-      setCurrentView('main');
-    } catch (error) {
-      console.error('Error saving data:', error);
-      alert('حدث خطأ أثناء حفظ البيانات');
-    }
-  };
+    return () => {
+      unsubscribeDebts();
+      unsubscribePaid();
+    };
+  } catch (error) {
+    console.error('Error setting up Firebase listeners:', error);
+    setIsLoading(false);
+  }
+}, []);
 
   
 
@@ -508,7 +496,13 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="container mx-auto">
-        {renderView()}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-xl">جاري التحميل...</div>
+          </div>
+        ) : (
+          renderView()
+        )}
       </div>
       <ToastContainer />
     </div>
