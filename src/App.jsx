@@ -3,22 +3,19 @@ import { database } from './firebase.jsx';
 import { ref, set, onValue } from 'firebase/database';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import notificationService from './NotificationService.jsx';
-import { showNotification, requestNotificationPermission } from './pushNotifications';
 import { requestNotificationPermission, showNotification } from './pushNotifications';
-
-
-// استيراد المكونات
-import { 
-  UserPlus, 
-  Receipt, 
+import {
+  UserPlus,
+  Receipt,
   BarChart3,
-  Search, 
-  AlertCircle, 
-  Loader2 
+  Search,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
-// ... باقي الاستيرادات
+
+
+
 
 // نموذج التفعيل
 function ActivationForm({ onSubmit, onReturn }) {
