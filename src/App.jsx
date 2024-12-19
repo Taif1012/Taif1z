@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase.jsx';
 import { ref, set, onValue } from 'firebase/database';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { requestNotificationPermission, showNotification } from './pushNotifications';
+
 import {
   UserPlus,
   Receipt,
@@ -448,34 +446,14 @@ function App() {
   const [debts, setDebts] = useState([]);
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
-  useEffect(() => {
-    const setupNotifications = async () => {
-      await requestNotificationPermission();
-    };
-    setupNotifications();
-  }, []);
+  
 
   const handleActivation = async (data) => {
     try {
       if (data.paymentStatus === 'unpaid') {
         await set(ref(database, `debts/${Date.now()}`), data);
-        // إظهار إشعار بسيط
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('إشعار جديد', {
-            body: `تم إضافة ${data.subscriberName} كمشترك غير واصل`,
-            icon: '/icon.png',
-            dir: 'rtl'
-          });
-        }
       } else {
         await set(ref(database, `paidSubscribers/${Date.now()}`), data);
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('إشعار جديد', {
-            body: `تم إضافة ${data.subscriberName} كمشترك واصل`,
-            icon: '/icon.png',
-            dir: 'rtl'
-          });
-        }
       }
       setCurrentView('main');
     } catch (error) {
@@ -484,12 +462,7 @@ function App() {
     }
   };
   
-  // طلب إذن الإشعارات عند بدء التطبيق
-  useEffect(() => {
-    if ('Notification' in window) {
-      Notification.requestPermission();
-    }
-  }, []);
+
 
   const renderView = () => {
     switch (currentView) {
