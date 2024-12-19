@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { database } from './firebase.jsx';
+import { ref, set, onValue } from 'firebase/database';
+import notificationService from './NotificationService.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import notificationService from './NotificationService.jsx';
-import { database } from './firebase';
-import { ref, set, onValue } from 'firebase/database';
 import {
   DollarSign, 
   Receipt, 
@@ -436,12 +436,14 @@ function MainMenu({ onNavigate, debtsCount = 0, paidCount = 0 }) {
 
 // التطبيق الرئيسي
 function App() {
+  console.log("App component loaded");
   const [currentView, setCurrentView] = useState('main');
   const [debts, setDebts] = useState([]);
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
   // مزامنة البيانات عند بدء التطبيق
   useEffect(() => {
+    // مزامنة البيانات من Firebase
     const debtsRef = ref(database, 'debts');
     const paidRef = ref(database, 'paidSubscribers');
 
@@ -459,15 +461,17 @@ function App() {
   const handleActivation = async (data) => {
     try {
       if (data.paymentStatus === 'unpaid') {
-        // حفظ في Firebase
-        await set(ref(database, `debts/${Date.now()}`), data);
+        // حفظ في قائمة الديون
+        const key = Date.now().toString();
+        await set(ref(database, `debts/${key}`), data);
         notificationService.showNotification(
           'إضافة مشترك',
           `تم إضافة ${data.subscriberName} كمشترك غير واصل`
         );
       } else {
-        // حفظ في Firebase
-        await set(ref(database, `paidSubscribers/${Date.now()}`), data);
+        // حفظ في قائمة المشتركين الواصلين
+        const key = Date.now().toString();
+        await set(ref(database, `paidSubscribers/${key}`), data);
         notificationService.showNotification(
           'إضافة مشترك',
           `تم إضافة ${data.subscriberName} كمشترك واصل`
@@ -475,11 +479,10 @@ function App() {
       }
       setCurrentView('main');
     } catch (error) {
-      console.error('Error:', error);
-      alert(`حدث خطأ أثناء حفظ البيانات`);
+      console.error('Error saving data:', error);
+      alert('حدث خطأ أثناء حفظ البيانات');
     }
   };
-
 
   
 
@@ -507,11 +510,7 @@ function App() {
       <div className="container mx-auto">
         {renderView()}
       </div>
-      <ToastContainer 
-        position="top-right"
-        rtl={true}
-        theme="colored"
-      />
+      <ToastContainer />
     </div>
   );
 }
