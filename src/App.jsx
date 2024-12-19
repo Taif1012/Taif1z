@@ -495,7 +495,7 @@ function App() {
       <div className="container mx-auto">
         {renderView()}
       </div>
-      <ToastContainer />
+  
     </div>
   );
 }
