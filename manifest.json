@@ -1,0 +1,7 @@
+{
+    "name": "نظام إدارة الاشتراكات",
+    "short_name": "الاشتراكات",
+    "start_url": "/",
+    "display": "standalone",
+    "gcm_sender_id": "549838967817"
+  }

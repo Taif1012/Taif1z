@@ -4,6 +4,7 @@ import { ref, set, onValue } from 'firebase/database';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import notificationService from './NotificationService.jsx';
+import { showNotification, requestNotificationPermission } from './pushNotifications';
 
 // استيراد المكونات
 import { 
@@ -234,10 +235,11 @@ function DebtsView({ debts, onReturn }) {
 }
 
 // عرض التقارير
-function ReportsView({ debts, onReturn }) {
+function ReportsView({ debts, paidSubscribers, onReturn }) {
   const totalDebts = debts.length;
-  const totalAmount = debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
-  const averageDebt = totalDebts > 0 ? (totalAmount / totalDebts).toFixed(2) : 0;
+  const totalPaid = paidSubscribers.length;
+  const totalDebtAmount = debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
+  const totalPaidAmount = paidSubscribers.reduce((sum, sub) => sum + Number(sub.amount), 0);
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
@@ -249,18 +251,22 @@ function ReportsView({ debts, onReturn }) {
       </div>
       <div className="p-6">
         <div className="space-y-6" dir="rtl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-purple-50 p-4 rounded-lg text-center">
               <h3 className="text-lg font-bold text-purple-700">عدد الديون</h3>
               <p className="text-2xl font-bold text-purple-600">{totalDebts}</p>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg text-center">
-              <h3 className="text-lg font-bold text-purple-700">إجمالي المبالغ</h3>
-              <p className="text-2xl font-bold text-purple-600">{totalAmount}</p>
+            <div className="bg-green-50 p-4 rounded-lg text-center">
+              <h3 className="text-lg font-bold text-green-700">عدد الواصلين</h3>
+              <p className="text-2xl font-bold text-green-600">{totalPaid}</p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg text-center">
-              <h3 className="text-lg font-bold text-purple-700">متوسط الدين</h3>
-              <p className="text-2xl font-bold text-purple-600">{averageDebt}</p>
+              <h3 className="text-lg font-bold text-purple-700">إجمالي الديون</h3>
+              <p className="text-2xl font-bold text-purple-600">{totalDebtAmount}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg text-center">
+              <h3 className="text-lg font-bold text-green-700">إجمالي الواصل</h3>
+              <p className="text-2xl font-bold text-green-600">{totalPaidAmount}</p>
             </div>
           </div>
 
@@ -318,7 +324,7 @@ function PaidSubscribersView({ subscribers, onReturn }) {
       <div className="bg-gradient-to-r from-green-500 to-green-700 p-4">
         <h2 className="text-2xl text-white font-bold flex items-center justify-center gap-2">
           <UserPlus className="w-6 h-6" />
-          قائمة المشتركين الواصلين
+          المشتركين الواصلين
         </h2>
       </div>
       <div className="p-6">
@@ -444,41 +450,28 @@ function App() {
   const [paidSubscribers, setPaidSubscribers] = useState([]);
 
   useEffect(() => {
-    const debtsRef = ref(database, 'debts');
-    const paidRef = ref(database, 'paidSubscribers');
-
-    onValue(debtsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setDebts(Object.values(data));
-    });
-
-    onValue(paidRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setPaidSubscribers(Object.values(data));
-    });
+    requestNotificationPermission();
   }, []);
-
+  
   const handleActivation = async (data) => {
     try {
       if (data.paymentStatus === 'unpaid') {
-        const key = Date.now().toString();
-        await set(ref(database, `debts/${key}`), data);
-        notificationService.showNotification(
-          'إضافة مشترك',
+        await set(ref(database, `debts/${Date.now()}`), data);
+        showNotification(
+          'مشترك جديد',
           `تم إضافة ${data.subscriberName} كمشترك غير واصل`
         );
       } else {
-        const key = Date.now().toString();
-        await set(ref(database, `paidSubscribers/${key}`), data);
-        notificationService.showNotification(
-          'إضافة مشترك',
+        await set(ref(database, `paidSubscribers/${Date.now()}`), data);
+        showNotification(
+          'مشترك جديد',
           `تم إضافة ${data.subscriberName} كمشترك واصل`
         );
       }
       setCurrentView('main');
     } catch (error) {
-      console.error('Error saving data:', error);
-      alert('حدث خطأ أثناء حفظ البيانات');
+      console.error('Error:', error);
+      alert('حدث خطأ أثناء الحفظ');
     }
   };
 
